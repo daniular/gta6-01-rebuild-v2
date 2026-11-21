@@ -4,6 +4,7 @@
 
 import { dist2, clamp } from './config.js';
 import { raiseWanted } from './police.js';
+import { onEnemyDown } from './missions.js';
 
 export function createCombat() {
   return {
@@ -65,7 +66,7 @@ export function updateCombat(G, dt) {
           if (e.hp <= 0) {
             G.particles.burst(e.x, e.y, '#ff5a4a', 22);
             G.audio.explosion();
-            G.missions.onEnemyDown(G, e);
+            onEnemyDown(G, e);
           }
           break;
         }

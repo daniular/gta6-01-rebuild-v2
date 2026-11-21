@@ -93,17 +93,19 @@ export function updatePolice(G, dt) {
   }
 
   // Foot cops chase; touching the player for 1.5s busts him.
-  pol.bustedTouch = 0;
+  let touching = false;
   for (const fc of pol.footCops) {
     const a = Math.atan2(p.y - fc.y, p.x - fc.x);
     fc.angle = a;
     fc.x += Math.cos(a) * fc.speed * dt;
     fc.y += Math.sin(a) * fc.speed * dt;
     if (dist2(fc.x, fc.y, p.x, p.y) < 28 * 28) {
-      pol.bustedTouch += dt;
+      touching = true;
       damagePlayer(G, 6 * dt);
     }
   }
+  if (touching) pol.bustedTouch += dt;
+  else pol.bustedTouch = 0;
   if (pol.bustedTouch > 1.5) {
     bustPlayer(G);
   }

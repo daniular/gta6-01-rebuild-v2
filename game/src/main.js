@@ -3,7 +3,7 @@
 // screenshot pass uses to stage each scene deterministically.
 
 import { VIEW_W, VIEW_H } from './config.js';
-import { createInput, pressed, consumeClick } from './input.js';
+import { createInput, pressed, wasPressed, endFrame, consumeClick } from './input.js';
 import { createAudio } from './audio.js';
 import { buildWorld } from './world.js';
 import { createPlayer, updatePlayerOnFoot, tryEnterCar, exitCar } from './player.js';
@@ -158,6 +158,7 @@ function applyShot(G) {
     G.camera.x = G.player.x - VIEW_W / 2;
     G.camera.y = G.player.y - VIEW_H / 2;
   } else if (shot === 'mission') {
+    G.missions.unlocked = 2;
     startMission(G, 2);
     G.player.x = G.world.roadXs[3];
     G.player.y = G.world.roadYs[4];
@@ -192,32 +193,26 @@ function update(G, dt) {
   const p = G.player;
   const input = G.input;
 
-  if (pressed(input, 'p', 'P', 'Escape')) {
+  if (wasPressed(input, 'p', 'P', 'Escape')) {
     G.state = 'paused';
     G.audio.stopEngine();
     return;
   }
-  if (pressed(input, 'h', 'H')) {
+  if (wasPressed(input, 'h', 'H')) {
     G.state = 'help';
     return;
   }
-  if (pressed(input, 'n', 'N')) {
+  if (wasPressed(input, 'n', 'N')) {
     G.audio.toggleMute();
-    input.keys['n'] = false;
-    input.keys['N'] = false;
   }
-  if (pressed(input, 'm', 'M')) {
+  if (wasPressed(input, 'm', 'M')) {
     if (!G.missions.active && G.missions.unlocked < 6) {
       startMission(G, G.missions.unlocked);
     }
-    input.keys['m'] = false;
-    input.keys['M'] = false;
   }
-  if (pressed(input, 'e', 'E')) {
+  if (wasPressed(input, 'e', 'E')) {
     if (p.inCar) exitCar(G);
     else tryEnterCar(G);
-    input.keys['e'] = false;
-    input.keys['E'] = false;
   }
 
   if (p.inCar) updateDriving(G, dt);
@@ -240,11 +235,12 @@ function update(G, dt) {
 
 function handleMenuKeys(G) {
   const input = G.input;
-  const enter = pressed(input, 'Enter') || consumeClick(input);
-  if (!enter && !pressed(input, 'c', 'C')) return;
+  const enter = wasPressed(input, 'Enter') || consumeClick(input);
+  const cont = wasPressed(input, 'c', 'C');
+  if (!enter && !cont) return;
   G.audio.unlock();
   if (G.state === 'menu') {
-    if (pressed(input, 'c', 'C') && G.saveData) {
+    if (cont && G.saveData) {
       startPlaying(G, false);
       if (G.saveData.x !== null) {
         G.player.x = G.saveData.x;
@@ -270,11 +266,8 @@ function handleMenuKeys(G) {
 
 function handlePausedKeys(G) {
   const input = G.input;
-  if (pressed(input, 'p', 'P', 'Escape') || consumeClick(input)) {
+  if (wasPressed(input, 'p', 'P', 'Escape') || consumeClick(input)) {
     G.state = 'playing';
-    input.keys['p'] = false;
-    input.keys['P'] = false;
-    input.keys['Escape'] = false;
   }
 }
 
@@ -286,6 +279,8 @@ export function boot() {
 
   let last = performance.now();
   function frame(now) {
+    // Schedule the next frame first: one bad update must never kill the loop.
+    requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     if (G.state === 'menu' || G.state === 'wasted' || G.state === 'busted' || G.state === 'help') {
@@ -301,7 +296,7 @@ export function boot() {
       update(G, dt);
     }
     render(G);
-    requestAnimationFrame(frame);
+    endFrame(G.input);
   }
   requestAnimationFrame(frame);
 }

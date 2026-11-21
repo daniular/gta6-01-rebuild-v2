@@ -179,6 +179,14 @@ function drawWorld(ctx, G, t) {
     ctx.fillRect(b.x + 6, b.y + 6, b.w - 12, b.h - 12);
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fillRect(b.x + 12, b.y + 12, b.w - 24, 8);
+    // Roof furniture: vents and skylights, placed by a fixed hash of the
+    // building's position so they never move between loads.
+    const h1 = ((b.x * 31 + b.y * 17) % 100) / 100;
+    const h2 = ((b.x * 13 + b.y * 41) % 100) / 100;
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillRect(b.x + 14 + h1 * (b.w - 60), b.y + 26 + h2 * (b.h - 60), 18, 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.fillRect(b.x + 20 + h2 * (b.w - 70), b.y + 30 + h1 * (b.h - 70), 22, 12);
   }
 
   // Palm trees.
@@ -317,8 +325,6 @@ function drawHud(ctx, G) {
   ctx.font = '13px sans-serif';
   ctx.fillText(`Mission ${G.missions.completed} / 6 complete`, 22, 48);
   // Health bar.
-  ctx.fillStyle = '#333';
-  ctx.fillRect(22, 66, 0, 0);
   ctx.fillStyle = p.health > 30 ? '#7ee787' : '#ff5a4a';
   ctx.fillRect(150, 24, 100 * (p.health / 100), 12);
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
@@ -353,14 +359,14 @@ function drawHud(ctx, G) {
   ctx.font = '12px sans-serif';
   ctx.fillText('WASD move / drive · E enter car · Click shoot · M mission · P pause · H help', 22, VIEW_H - 32);
 
-  // Speed when driving.
+  // Speed when driving, bottom right beside the minimap.
   if (p.inCar) {
     ctx.fillStyle = 'rgba(10,14,20,0.72)';
-    ctx.fillRect(VIEW_W - 190, VIEW_H - 64, 178, 52);
+    ctx.fillRect(VIEW_W - 426, VIEW_H - 64, 178, 52);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${Math.round(Math.abs(p.inCar.speed) * 0.18)} mph`, VIEW_W - 101, VIEW_H - 54);
+    ctx.fillText(`${Math.round(Math.abs(p.inCar.speed) * 0.18)} mph`, VIEW_W - 337, VIEW_H - 54);
     ctx.textAlign = 'left';
   }
 

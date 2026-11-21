@@ -5,6 +5,7 @@
 
 import { clamp, dist2 } from './config.js';
 import { collideBuildings, clampToLand, isWaterAt } from './world.js';
+import { raiseWanted } from './police.js';
 
 export function createPlayer(world) {
   return {
@@ -78,7 +79,7 @@ export function tryEnterCar(G) {
   if (car.driver === 'traffic' || car.driver === 'cop') {
     // Yank the driver out and take the car: grand theft auto.
     car.driver = 'player';
-    G.police.raiseWanted(G, 1, 'stole a car');
+    raiseWanted(G, 1, 'stole a car');
     G.particles.burst(car.x, car.y, '#ffd24a', 10);
     const ejected = { x: car.x + 26, y: car.y + 26, r: 12, flee: 2.5, angle: 0, speed: 0, color: '#e8e0d0' };
     G.peds.push(ejected);
